@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include "serial/serial.h"
 
+/**
+ * chad comment
+ */
 int main(int argc, char *argv[]) {
 	(void)serial_open(argv[2]);
 	(void)puts(argv[argc - 1]);
