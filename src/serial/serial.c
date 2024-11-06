@@ -9,16 +9,15 @@
  * https://tldp.org/HOWTO/Serial-Programming-HOWTO/
  * https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
  */
-#include "serial.h"
-
+#include <asm-generic/termbits-common.h> // needed to shut up intellisense
 #include <alloca.h>
-#include <asm-generic/termbits-common.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include "serial.h"
 
 int serial_open(char *path_to_port) {
     /* symbols */
