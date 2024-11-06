@@ -9,6 +9,7 @@
  * https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
  */
 #include <stdio.h>
+#include <alloca.h>
 #include "serial/serial.h"
 
 /**

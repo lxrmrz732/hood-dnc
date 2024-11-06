@@ -12,7 +12,7 @@
  */
 int serial_open(char *path_to_port);
 
-struct termios *serial_configure(int unknown);
+// struct termios *serial_configure(int unknown);
 
 /**
  * Close the serial port in use with Hood DNC.
