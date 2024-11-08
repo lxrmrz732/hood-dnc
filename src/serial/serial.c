@@ -9,8 +9,8 @@
  * https://tldp.org/HOWTO/Serial-Programming-HOWTO/
  * https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
  */
-#include <asm-generic/termbits-common.h> // needed to shut up intellisense
 #include <alloca.h>
+#include <asm-generic/termbits-common.h>  // needed to c89
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -21,7 +21,7 @@
 
 int serial_open(char *path_to_port) {
     /* symbols */
-    int fd;
+    int fd = -1;
 
     /* straight from source #1 */
     fd = open(path_to_port, O_RDWR | O_NOCTTY);
@@ -52,11 +52,11 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
         return -1;
     }
 
-	/* weirdo settings */
+    /* weirdo settings */
     new_config.c_cflag |= (CLOCAL | CREAD); /* ignore modem controls */
     new_config.c_cflag &= ~CSIZE;
-    new_config.c_cflag |= CS8;      /* 8-bit characters */
-    new_config.c_cflag &= ~PARENB;  /* no parity bit */
+    new_config.c_cflag |= CS8; /* 8-bit characters */
+    // new_config.c_cflag &= ~PARENB;  /* no parity bit */ // should turn on instead
     new_config.c_cflag &= ~CSTOPB;  /* only need 1 stop bit */
     new_config.c_cflag &= ~CRTSCTS; /* no hardware flowcontrol */
 
