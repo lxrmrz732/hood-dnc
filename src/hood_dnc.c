@@ -10,6 +10,8 @@
  */
 #include "serial/serial.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /**
  * chad comment
@@ -28,7 +30,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* grab the params */
-	baud_rate = (speed_t)(argv[1]);
+	baud_rate = (speed_t)atoi(argv[1]);
 	serial_path = argv[2];
 
 	/* sanitize params */
@@ -38,7 +40,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* open the serial port */
-	serial_fd = serial_open(serial_fd);
+	serial_fd = serial_open(serial_path);
 	if (serial_fd == -1) {
 		(void)fprintf(stderr, "failed to open the mf serial port\n");
 		return 3;

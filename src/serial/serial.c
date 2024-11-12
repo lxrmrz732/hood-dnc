@@ -76,14 +76,14 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 
 int serial_close(int fd, struct termios *old_config) {
 	/* fr don't do it */
-	if (fd == stdin || fd == stdout || fd == stderr) {
+	if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO) {
 		(void)fprintf(stderr, "nah bruh don't close those\n");
 		return -1;
 	}
 
 	/* set the old parameters bro; idgaf if it fails */
-	if (old_config && (fd, TCSANOW, &old_config) != 0) {
-		(void)printf(stderr, "Error from tcsetattr: %s\n", strerror(errno));
+	if (old_config && tcsetattr(fd, TCSANOW, old_config) != 0) {
+		(void)fprintf(stderr, "Error from tcsetattr: %s\n", strerror(errno));
 	}
 
 	/* close the mf port */
