@@ -38,14 +38,14 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 
 	/* acquire and backup the current attributes*/
 	if (tcgetattr(fd, &new_config) < 0) {
-		(void)printf("Error from tcgetattr: %s\n", strerror(errno));
+		(void)fprintf(stderr, "Error from tcgetattr: %s\n", strerror(errno));
 		return -1;
 	}
 	(void)memcpy(old_config, &new_config, sizeof(struct termios));
 
 	/* set baud rate */
 	if (cfsetospeed(&new_config, (speed_t)rate) || cfsetispeed(&new_config, (speed_t)rate)) {
-		(void)printf("Error setting baud rate %d: %s\n", rate, strerror(errno));
+		(void)fprintf(stderr, "Error setting baud rate %d: %s\n", rate, strerror(errno));
 		return -1;
 	}
 
@@ -68,9 +68,24 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 
 	/* actually set the attributes */
 	if (tcsetattr(fd, TCSANOW, &new_config) != 0) {
-		printf("Error from tcsetattr: %s\n", strerror(errno));
+		(void)fprintf(stderr, "Error from tcsetattr: %s\n", strerror(errno));
 		return -1;
 	}
 	return 0;
 }
 
+int serial_close(int fd, struct termios *old_config) {
+	/* fr don't do it */
+	if (fd == stdin || fd == stdout || fd == stderr) {
+		(void)fprintf(stderr, "nah bruh don't close those\n");
+		return -1;
+	}
+
+	/* set the old parameters bro; idgaf if it fails */
+	if (old_config && (fd, TCSANOW, &old_config) != 0) {
+		(void)printf(stderr, "Error from tcsetattr: %s\n", strerror(errno));
+	}
+
+	/* close the mf port */
+	return close(fd);
+}

@@ -1,6 +1,7 @@
 /**
  * Headers for serial.c
  */
+#include <termios.h>
 
 /**
  * Initialize the serial port for use with Hood DNC.
@@ -18,7 +19,7 @@ int serial_open(char *path_to_port);
  *
  * @param fd file descriptor to open serial port
  * @param rate desired baud rate of serial port
- * @param old_config pointer to a space to backup old configuration
+ * @param old_config pointer to backup old configuration
  *
  * @return 0 if the port was configured successfully, -1 otherwise
  */
@@ -28,8 +29,9 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config);
  * Close the serial port in use with Hood DNC.
  * Restore the old configuration and release the file descriptor.
  *
- * @param a ligma
+ * @param fd file descriptor to open serial port
+ * @param old_config pointer to backup old configuration
  *
- * @return file descriptor to serial port
+ * @return 0 if the port was configured successfully, -1 otherwise
  */
-int serial_close(void);
+int serial_close(int fd, struct termios *old_config);
