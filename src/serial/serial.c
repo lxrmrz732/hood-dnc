@@ -35,7 +35,7 @@ int serial_open(char *path_to_port) {
 int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 	/* straight from source #2 */
 	struct termios new_config = {0};
-
+	
 	/* acquire and backup the current attributes*/
 	if (tcgetattr(fd, &new_config) < 0) {
 		(void)fprintf(stderr, "Error from tcgetattr: %s\n", strerror(errno));
