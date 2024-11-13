@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -O3 -Wall -Werror -Wextra -Wpedantic
+CFLAGS := -O3 -Wall -Werror -Wextra -Wpedantic -std=c89
 SRCDIR := src
 OBJDIR := obj
 BINDIR := bin

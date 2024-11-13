@@ -8,7 +8,7 @@
  */
 #include "serial.h"
 #include <alloca.h>
-#include <asm-generic/termbits-common.h> // needed to c89
+#include <asm-generic/termbits-common.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
