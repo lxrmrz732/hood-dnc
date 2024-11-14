@@ -82,7 +82,7 @@ int serial_close(int fd, struct termios *old_config) {
 	}
 
 	/* set the old parameters bro; idgaf if it fails */
-	if (old_config && tcsetattr(fd, TCSANOW, old_config) != 0) {
+	if (old_config && tcsetattr(fd, TCSANOW, old_config)) {
 		(void)fprintf(stderr, "Error from tcsetattr: %s\n", strerror(errno));
 	}
 
