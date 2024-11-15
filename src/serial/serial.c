@@ -25,7 +25,7 @@ int serial_open(char *path_to_port) {
 
 	/* error check file descriptor */
 	if (fd < 0) {
-		perror(path_to_port);
+		IO_ERROR("serial port error", path_to_port, errno);
 	}
 
 	/* yay */
@@ -38,22 +38,22 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 
 	/* acquire and backup the current attributes*/
 	if (tcgetattr(fd, &new_config) < 0) {
-		(void)fprintf(stderr, "Error from tcgetattr: %s\n", strerror(errno));
+		IO_ERROR("opening error", "tcsetattr", errno)
 		return -1;
 	}
 	(void)memcpy(old_config, &new_config, sizeof(struct termios));
 
 	/* set baud rate */
 	if (cfsetospeed(&new_config, (speed_t)rate) || cfsetispeed(&new_config, (speed_t)rate)) {
-		(void)fprintf(stderr, "Error setting baud rate %d: %s\n", rate, strerror(errno));
+		IO_ERROR("error setting baud rate", "cfsetiospeed", errno)
 		return -1;
 	}
 
-	/* weirdo settings */
+	/* weirdo settings taken verbatim from source #2 */
 	new_config.c_cflag |= (CLOCAL | CREAD); /* ignore modem controls */
 	new_config.c_cflag &= ~CSIZE;			/* invert CSIZE to later set CS8 */
 	new_config.c_cflag |= CS8;				/* 8-bit characters */
-	new_config.c_cflag &= ~PARENB;			/* no parity bit; should turn on */
+	new_config.c_cflag &= ~PARENB;			/* no parity bit */
 	new_config.c_cflag &= ~CSTOPB;			/* only need 1 stop bit */
 	new_config.c_cflag &= ~CRTSCTS;			/* no hardware flowcontrol */
 
@@ -66,9 +66,13 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 	new_config.c_cc[VMIN] = 1;
 	new_config.c_cc[VTIME] = 1;
 
+	/* break the hivemind; set even parity and hardware flow control */
+	new_config.c_cflag |= CRTSCTS;
+	new_config.c_cflag |= PARENB;
+
 	/* actually set the attributes */
 	if (tcsetattr(fd, TCSANOW, &new_config) != 0) {
-		(void)fprintf(stderr, "Error from tcsetattr: %s\n", strerror(errno));
+		IO_ERROR("configuration error", "tcsetattr", errno)
 		return -1;
 	}
 	return 0;
@@ -77,13 +81,13 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 int serial_close(int fd, struct termios *old_config) {
 	/* fr don't do it */
 	if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO) {
-		(void)fprintf(stderr, "nah bruh don't close those\n");
+		ERROR("nah bruh don't close those");
 		return -1;
 	}
 
 	/* set the old parameters bro; idgaf if it fails */
 	if (old_config && tcsetattr(fd, TCSANOW, old_config)) {
-		(void)fprintf(stderr, "Error from tcsetattr: %s\n", strerror(errno));
+		IO_ERROR("closing error", "tcsetattr", errno)
 	}
 
 	/* close the mf port */

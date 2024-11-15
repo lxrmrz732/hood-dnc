@@ -31,14 +31,14 @@ int main(int argc, char *argv[]) {
 	struct termios backup_config = {0};
 	char *serial_path = NULL;
 	char *file_path = NULL;
-	speed_t baud_rate = -1; /* use 4097 for B57600; try 4102 */
+	speed_t baud_rate = -1; /* try (15 = B38400), (4098 = B115200), or (13 = B9600) for mill */
 	int serial_fd = -1;
 	int helper_return = -1;
 	char mode = -1;
 
-	/* chack the params, FUCK stdin */
+	/* chack the params; this is a "no stdin" household */
 	if (argc != 5) {
-		(void)fprintf(stderr, "Usage: ./%s [baud rate] [serial port] [file to send/receive] ['s'end/'r'eceive]\n", argv[0]);
+		(void)fprintf(stderr, "Usage: %s [baud rate] [serial port] [file to send/receive] ['s'end/'r'eceive]\n", PROG);
 		return 1;
 	}
 
@@ -50,22 +50,22 @@ int main(int argc, char *argv[]) {
 
 	/* sanitize params */
 	if (baud_rate == 0) {
-		(void)fprintf(stderr, "bro atoi failed; use a real number\n");
+		ERROR("atoi failed; try a real number for baud rate");
 		return 2;
 	}
 	if (mode != SEND && mode != RECEIVE) {
-		(void)fprintf(stderr, "file mode MUST be 's'end or 'r'eceive\n");
+		ERROR("file mode MUST be 's'end or 'r'eceive");
 		return 3;
 	}
 
 	/* open and configure the serial port */
 	serial_fd = serial_open(serial_path);
 	if (serial_fd == -1) {
-		(void)fprintf(stderr, "failed to open the mf serial port\n");
+		ERROR("failed to open the mf serial port");
 		return 4;
 	}
 	if ((helper_return = serial_configure(serial_fd, baud_rate, &backup_config))) {
-		(void)fprintf(stderr, "failed to configure the mf serial port\n");
+		ERROR("failed to configure the mf serial port");
 		mode = FAIL;
 	}
 
@@ -76,16 +76,16 @@ int main(int argc, char *argv[]) {
 		break;
 	}
 	case RECEIVE: {
-		(void)fprintf(stderr, "nc receive not implemented\n");
+		ERROR("nc receive not implemented");
 		break;
 	}
 	default:
-		(void)fprintf(stderr, "mode set to %c, bailing", mode);
+		ERROR("program control flow failed; exiting");
 	}
 
 	/* close the serial port */
 	if (serial_close(serial_fd, &backup_config)) {
-		(void)fprintf(stderr, "failed to close the mf serial port\n");
+		ERROR("failed to close the mf serial port");
 		return 7;
 	}
 	return helper_return;
@@ -112,14 +112,14 @@ int nc_send(int serial_fd, char *file_path) {
 	/* open and read from the file */
 	nc_file = fopen(file_path, "r");
 	if (nc_file == NULL) {
-		(void)fprintf(stderr, "Error opening NC file %s: %s\n", file_path, strerror(errno));
+		IO_ERROR("error opening NC file", file_path, errno);
 		return 10;
 	}
 
 	/* write contents to the serial port as they are read from the file */
 	while ((bytes_read = fread(data_buffer, 1, BUFSIZ, nc_file))) {
 		if (write(serial_fd, data_buffer, bytes_read) == -1) {
-			(void)fprintf(stderr, "Writing to serial port fucked up: %s\n", strerror(errno));
+			IO_ERROR("error writing", "serial port", errno);
 			status = 11;
 			break;
 		}
@@ -127,11 +127,11 @@ int nc_send(int serial_fd, char *file_path) {
 
 	/* error "handling" */
 	if (ferror(nc_file)) {
-		(void)fprintf(stderr, "Error reading NC file: %s\n", strerror(errno));
+		IO_ERROR("error reading NC file", file_path, errno);
 		status = 12;
 	}
 	if (fclose(nc_file)) {
-		(void)fprintf(stderr, "Error closing NC file: %s\n", strerror(errno));
+		IO_ERROR("error closing NC file", file_path, errno);
 		status = 13;
 	}
 	return status;

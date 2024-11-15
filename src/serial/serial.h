@@ -1,7 +1,11 @@
 /**
- * Headers for serial.c
+ * Headers for serial.c and hood_dnc.c along with some helpful macros.
  */
 #include <termios.h>
+
+#define PROG "hood_dnc"
+#define ERROR(MSG) (void)fprintf(stderr, "%s: %s\n", PROG, MSG)
+#define IO_ERROR(MSG, FNAME, ERRNO) (void)fprintf(stderr, "%s: %s %s: %s\n", PROG, MSG, FNAME, strerror(ERRNO));
 
 /**
  * Initialize the serial port for use with Hood DNC.
