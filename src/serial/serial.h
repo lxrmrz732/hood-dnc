@@ -17,7 +17,7 @@
  *
  * @return file descriptor to serial port
  */
-int serial_open(char *path_to_port);
+extern int serial_open(char *path_to_port);
 
 /**
  * Configure the serial port for use with Hood DNC.
@@ -29,7 +29,7 @@ int serial_open(char *path_to_port);
  *
  * @return 0 if the port was configured successfully, -1 otherwise
  */
-int serial_configure(int fd, speed_t rate, struct termios *old_config);
+extern int serial_configure(int fd, speed_t rate, struct termios *old_config);
 
 /**
  * Close the serial port in use with Hood DNC.
@@ -40,4 +40,4 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config);
  *
  * @return 0 if the port was configured successfully, -1 otherwise
  */
-int serial_close(int fd, struct termios *old_config);
+extern int serial_close(int fd, struct termios *old_config);
