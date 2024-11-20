@@ -9,7 +9,7 @@
  * https://tldp.org/HOWTO/Serial-Programming-HOWTO/
  * https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
  */
-#define _GNU_SOURCE
+#define _POSIX_C_SOURCE 200809L
 
 #include <alloca.h>
 #include <errno.h>
@@ -23,9 +23,10 @@
 #define SEND 's'
 #define RECEIVE 'r'
 #define FAIL 'f'
+#define LINE_LEN 64
 
+int serial_dump(int serial_fd, char *file_path);
 int nc_send(int serial_fd, char *file_path);
-int nc_send_gnu(int serial_fd, char *file_path);
 int nc_receive(int serial_fd, char *file_path);
 
 /**
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]) {
 	/* yay branching */
 	switch (mode) {
 	case SEND: {
-		helper_return = nc_send_gnu(serial_fd, file_path);
+		helper_return = nc_send(serial_fd, file_path);
 		break;
 	}
 	case RECEIVE: {
@@ -99,13 +100,14 @@ int main(int argc, char *argv[]) {
 
 /**
  * Open a file and dump it to the serial port.
+ * Doesn't work for CNC machines lmfao.
  *
  * @param serial_fd serial port file descriptor
  * @param file_path path to file to dump
  *
  * @return zero on success, nonzero if anything went wrong
  */
-int nc_send(int serial_fd, char *file_path) {
+int serial_dump(int serial_fd, char *file_path) {
 	/* symbols */
 	FILE *nc_file = NULL;
 	char *data_buffer = NULL;
@@ -146,15 +148,14 @@ int nc_send(int serial_fd, char *file_path) {
 }
 
 /**
- * Open a file and dump it to the serial port
- * line-by-line using GNU extensions.
+ * Open a file and write it to the serial port line-by-line.
  *
  * @param serial_fd serial port file descriptor
  * @param file_path path to file to dump
  *
  * @return zero on success, nonzero if anything went wrong
  */
-int nc_send_gnu(int serial_fd, char *file_path) {
+int nc_send(int serial_fd, char *file_path) {
 	/* symbols */
 	FILE *nc_file = NULL;
 	char *data_buffer = NULL;
@@ -169,17 +170,16 @@ int nc_send_gnu(int serial_fd, char *file_path) {
 		return 30;
 	}
 
-	/* write contents to the serial port as they are read from the file */
+	/* write contents to the serial port line-by-line they are read from the file */
 	while ((bytes_read = getline(&data_buffer, &bytes_alloc, nc_file)) != -1) {
-		/* TODO remove this */
-		(void)printf("line size: %ld; line contents: %s", bytes_read, data_buffer);
-
+		/* verbosity */
+		(void)printf("writing %ld bytes; line contents: %s", bytes_read, data_buffer);
 		if (write(serial_fd, data_buffer, bytes_read) == -1) {
 			IO_ERROR("error writing", "serial port", errno);
 			status = 31;
 			break;
 		}
-		if (syncfs(serial_fd)) {
+		if (tcdrain(serial_fd)) {
 			IO_ERROR("error syncing", "serial port", errno);
 			status = 32;
 			break;
@@ -192,11 +192,13 @@ int nc_send_gnu(int serial_fd, char *file_path) {
 		status = 33;
 	}
 
-	/* TODO: capture how this program reads and apply that to writing */
+	/* close file and free buffers */
 	if (fclose(nc_file)) {
 		IO_ERROR("error closing NC file", file_path, errno);
 		status = 34;
 	}
+	free(data_buffer);
+	data_buffer = NULL;
 	return status;
 }
 
