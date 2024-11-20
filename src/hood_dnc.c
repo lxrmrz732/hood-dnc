@@ -23,11 +23,10 @@
 #define SEND 's'
 #define RECEIVE 'r'
 #define FAIL 'f'
-#define LINE_LEN 64
 
-int serial_dump(int serial_fd, char *file_path);
 int nc_send(int serial_fd, char *file_path);
 int nc_receive(int serial_fd, char *file_path);
+int serial_dump(int serial_fd, char *file_path);
 
 /**
  * chad comment
@@ -99,55 +98,6 @@ int main(int argc, char *argv[]) {
 }
 
 /**
- * Open a file and dump it to the serial port.
- * Doesn't work for CNC machines lmfao.
- *
- * @param serial_fd serial port file descriptor
- * @param file_path path to file to dump
- *
- * @return zero on success, nonzero if anything went wrong
- */
-int serial_dump(int serial_fd, char *file_path) {
-	/* symbols */
-	FILE *nc_file = NULL;
-	char *data_buffer = NULL;
-	size_t bytes_read = 0;
-	int status = 0;
-
-	/* allocate space */
-	data_buffer = alloca(sizeof(char) * BUFSIZ);
-
-	/* open and read from the file */
-	nc_file = fopen(file_path, "r");
-	if (nc_file == NULL) {
-		IO_ERROR("error opening NC file for reading", file_path, errno);
-		return 10;
-	}
-
-	/* write contents to the serial port as they are read from the file */
-	while ((bytes_read = fread(data_buffer, sizeof(char), BUFSIZ, nc_file))) {
-		if (write(serial_fd, data_buffer, bytes_read) == -1) {
-			IO_ERROR("error writing", "serial port", errno);
-			status = 11;
-			break;
-		}
-	}
-
-	/* error "handling" */
-	if (ferror(nc_file)) {
-		IO_ERROR("error reading NC file", file_path, errno);
-		status = 12;
-	}
-
-	/* TODO: capture how this program reads and apply that to writing */
-	if (fclose(nc_file)) {
-		IO_ERROR("error closing NC file", file_path, errno);
-		status = 13;
-	}
-	return status;
-}
-
-/**
  * Open a file and write it to the serial port line-by-line.
  *
  * @param serial_fd serial port file descriptor
@@ -174,11 +124,15 @@ int nc_send(int serial_fd, char *file_path) {
 	while ((bytes_read = getline(&data_buffer, &bytes_alloc, nc_file)) != -1) {
 		/* verbosity */
 		(void)printf("writing %ld bytes; line contents: %s", bytes_read, data_buffer);
+
+		/* queue the line for transmission */
 		if (write(serial_fd, data_buffer, bytes_read) == -1) {
 			IO_ERROR("error writing", "serial port", errno);
 			status = 31;
 			break;
 		}
+
+		/* ask termios to actually put it on the wire */
 		if (tcdrain(serial_fd)) {
 			IO_ERROR("error syncing", "serial port", errno);
 			status = 32;
@@ -256,6 +210,53 @@ int nc_receive(int serial_fd, char *file_path) {
 	if (fclose(nc_file)) {
 		IO_ERROR("error closing NC file", file_path, errno);
 		status = 25;
+	}
+	return status;
+}
+
+/**
+ * Open a file and dump it to the serial port.
+ * Doesn't work for CNC machines lmfao.
+ *
+ * @param serial_fd serial port file descriptor
+ * @param file_path path to file to dump
+ *
+ * @return zero on success, nonzero if anything went wrong
+ */
+int serial_dump(int serial_fd, char *file_path) {
+	/* symbols */
+	FILE *nc_file = NULL;
+	char *data_buffer = NULL;
+	size_t bytes_read = 0;
+	int status = 0;
+
+	/* allocate space */
+	data_buffer = alloca(sizeof(char) * BUFSIZ);
+
+	/* open and read from the file */
+	nc_file = fopen(file_path, "r");
+	if (nc_file == NULL) {
+		IO_ERROR("error opening NC file for reading", file_path, errno);
+		return 10;
+	}
+
+	/* write contents to the serial port as they are read from the file */
+	while ((bytes_read = fread(data_buffer, sizeof(char), BUFSIZ, nc_file))) {
+		if (write(serial_fd, data_buffer, bytes_read) == -1) {
+			IO_ERROR("error writing", "serial port", errno);
+			status = 11;
+			break;
+		}
+	}
+
+	/* error "handling" */
+	if (ferror(nc_file)) {
+		IO_ERROR("error reading NC file", file_path, errno);
+		status = 12;
+	}
+	if (fclose(nc_file)) {
+		IO_ERROR("error closing NC file", file_path, errno);
+		status = 13;
 	}
 	return status;
 }
