@@ -36,14 +36,16 @@ int main(int argc, char *argv[]) {
 	struct termios backup_config = {0};
 	char *serial_path = NULL;
 	char *file_path = NULL;
-	speed_t baud_rate = -1; /* try (15 = B38400), (4098 = B115200), or (13 = B9600) for mill */
+	speed_t baud_rate = -1; /* try (15 = B38400), (4098 = B115200), or (13 = B9600) */
 	int serial_fd = -1;
 	int helper_return = -1;
 	char mode = -1;
 
 	/* check the params; this is a "no stdin" household */
 	if (argc != 5) {
-		(void)fprintf(stderr, "Usage: %s [baud rate] [serial port] [file to send/receive] ['s'end/'r'eceive]\n", PROG);
+		(void)fprintf(stderr,
+					  "Usage: %s [baud rate] [serial port] [file] ['s'end/'r'eceive]\n",
+					  PROG);
 		return 1;
 	}
 
