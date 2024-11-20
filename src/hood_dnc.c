@@ -153,6 +153,7 @@ int nc_send(int serial_fd, char *file_path) {
 	}
 	free(data_buffer);
 	data_buffer = NULL;
+	nc_file = NULL;
 	return status;
 }
 
@@ -211,6 +212,8 @@ int nc_receive(int serial_fd, char *file_path) {
 		IO_ERROR("error closing NC file", file_path, errno);
 		status = 25;
 	}
+	data_buffer = NULL;
+	nc_file = NULL;
 	return status;
 }
 
@@ -258,5 +261,7 @@ int serial_dump(int serial_fd, char *file_path) {
 		IO_ERROR("error closing NC file", file_path, errno);
 		status = 13;
 	}
+	data_buffer = NULL;
+	nc_file = NULL;
 	return status;
 }
