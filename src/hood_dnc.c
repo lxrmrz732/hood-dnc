@@ -116,18 +116,15 @@ int nc_send(int serial_fd, char *file_path) {
 	/* open and read from the file */
 	nc_file = fopen(file_path, "r");
 	if (nc_file == NULL) {
-		IO_ERROR("error opening NC file for reading", file_path, errno);
+		IO_ERROR("error opening NC file", file_path, errno);
 		return 30;
 	}
 
 	/* write contents to the serial port line-by-line they are read from the file */
 	while ((bytes_read = getline(&data_buffer, &bytes_alloc, nc_file)) != -1) {
-		/* verbosity */
-		(void)printf("writing %ld bytes; line contents: %s", bytes_read, data_buffer);
-
 		/* queue the line for transmission */
 		if (write(serial_fd, data_buffer, bytes_read) == -1) {
-			IO_ERROR("error writing", "serial port", errno);
+			IO_ERROR("error writing to", "serial port", errno);
 			status = 31;
 			break;
 		}
@@ -179,20 +176,23 @@ int nc_receive(int serial_fd, char *file_path) {
 	/* open file for writing */
 	nc_file = fopen(file_path, "w");
 	if (nc_file == NULL) {
-		IO_ERROR("error opening NC file for writing", file_path, errno);
+		IO_ERROR("error opening NC file", file_path, errno);
 		return 20;
 	}
 
 	/* this is "read with timeout" according to man termios */
 	while ((bytes_read = read(serial_fd, data_buffer, MAX_SERIAL_READ))) {
+		/* check for fumble */
 		if (bytes_read == -1) {
-			IO_ERROR("error reading", "serial port", errno);
+			IO_ERROR("error reading from", "serial port", errno);
 			status = 21;
 			break;
 		}
+
+		/* dump content to disk */
 		if (!(bytes_written = fwrite(data_buffer, sizeof(char), bytes_read, nc_file))) {
 			if (ferror(nc_file)) {
-				IO_ERROR("error writing", file_path, errno);
+				IO_ERROR("error writing to", file_path, errno);
 				status = 22;
 				break;
 			} else {
@@ -239,14 +239,14 @@ int serial_dump(int serial_fd, char *file_path) {
 	/* open and read from the file */
 	nc_file = fopen(file_path, "r");
 	if (nc_file == NULL) {
-		IO_ERROR("error opening NC file for reading", file_path, errno);
+		IO_ERROR("error opening NC file", file_path, errno);
 		return 10;
 	}
 
 	/* write contents to the serial port as they are read from the file */
 	while ((bytes_read = fread(data_buffer, sizeof(char), BUFSIZ, nc_file))) {
 		if (write(serial_fd, data_buffer, bytes_read) == -1) {
-			IO_ERROR("error writing", "serial port", errno);
+			IO_ERROR("error writing to", "serial port", errno);
 			status = 11;
 			break;
 		}

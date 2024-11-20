@@ -26,7 +26,7 @@ int serial_open(char *path_to_port) {
 
 	/* error check file descriptor */
 	if (fd < 0) {
-		IO_ERROR("serial port error", path_to_port, errno);
+		IO_ERROR("error opening serial port", path_to_port, errno);
 	}
 
 	/* yay */
@@ -39,14 +39,14 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 
 	/* acquire and backup the current attributes*/
 	if (tcgetattr(fd, &new_config) < 0) {
-		IO_ERROR("opening error", "tcsetattr", errno)
+		IO_ERROR("error backing up configuration with", "tcgetattr", errno)
 		return -1;
 	}
 	(void)memcpy(old_config, &new_config, sizeof(struct termios));
 
 	/* set baud rate */
 	if (cfsetospeed(&new_config, (speed_t)rate) || cfsetispeed(&new_config, (speed_t)rate)) {
-		IO_ERROR("error setting baud rate", "cfsetiospeed", errno)
+		IO_ERROR("error setting baud rate with", "cfsetiospeed", errno)
 		return -1;
 	}
 
@@ -73,7 +73,7 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 
 	/* actually set the attributes */
 	if (tcsetattr(fd, TCSANOW, &new_config) != 0) {
-		IO_ERROR("configuration error", "tcsetattr", errno)
+		IO_ERROR("error applying configuration with", "tcsetattr", errno)
 		return -1;
 	}
 	return 0;
@@ -88,7 +88,7 @@ int serial_close(int fd, struct termios *old_config) {
 
 	/* set the old parameters bro; idgaf if it fails */
 	if (old_config && tcsetattr(fd, TCSANOW, old_config)) {
-		IO_ERROR("closing error", "tcsetattr", errno)
+		IO_ERROR("error restoring configuration with", "tcsetattr", errno)
 	}
 
 	/* close the mf port */
