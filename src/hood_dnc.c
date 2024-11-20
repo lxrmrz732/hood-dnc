@@ -134,7 +134,7 @@ int nc_send(int serial_fd, char *file_path) {
 		status = 12;
 	}
 
-	/* TODO: send end-of-transmission data so the machine finishes */
+	/* TODO: capture how this program reads and apply that to writing */
 	if (fclose(nc_file)) {
 		IO_ERROR("error closing NC file", file_path, errno);
 		status = 13;
