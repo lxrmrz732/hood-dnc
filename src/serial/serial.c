@@ -69,7 +69,7 @@ int serial_configure(int fd, speed_t rate, struct termios *old_config) {
 
 	/* break the hivemind; set even parity and software flow control */
 	new_config.c_cflag |= PARENB;
-	new_config.c_iflag |= IXON | IXOFF;
+	new_config.c_iflag |= IXON | IXOFF | IXANY;
 
 	/* actually set the attributes */
 	if (tcsetattr(fd, TCSANOW, &new_config) != 0) {
