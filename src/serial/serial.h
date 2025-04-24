@@ -4,10 +4,10 @@
 #include <termios.h>
 
 #define PROG "hood_dnc"
-#define READ_TIMEOUT_SEC 100
+#define READ_TIMEOUT_DSEC 100
 #define MAX_SERIAL_READ __UINT8_MAX__
 #define ERROR(MSG) (void)fprintf(stderr, "%s: %s\n", PROG, MSG)
-#define IO_ERROR(MSG, FNAME, ERRNO) (void)fprintf(stderr, "%s: %s %s: %s\n", PROG, MSG, FNAME, strerror(ERRNO));
+#define IO_ERROR(MSG, FNAME, ERRNO) (void)fprintf(stderr, "%s: %s %s: %s\n", PROG, MSG, FNAME, strerror(ERRNO))
 
 /**
  * Initialize the serial port for use with Hood DNC.

@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 
 	/* open and configure the serial port */
 	serial_fd = serial_open(serial_path);
-	if (serial_fd == -1) {
+	if (serial_fd < 0) {
 		ERROR("failed to open the mf serial port");
 		return 4;
 	}
